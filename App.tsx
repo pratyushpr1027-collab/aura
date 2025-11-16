@@ -1,67 +1,61 @@
-import React, { useState, useCallback } from 'react';
-import useWellnessData from './hooks/useIotData';
-import AiAssistant from './components/AiAssistant';
-import { handleAiCommand } from './services/geminiService';
-import Sidebar from './components/Sidebar';
-import Dashboard from './components/Dashboard';
-import Journal from './components/Journal';
-import Goals from './components/Goals';
-import ChartCard from './components/ChartCard';
+import React, { useState, useRef, useEffect } from 'react';
+import LandingPage from './components/Journal'; // Repurposed Journal.tsx as LandingPage.tsx
+import ChatDashboard from './components/Dashboard'; // Repurposed Dashboard.tsx as ChatDashboard.tsx
 
 const App: React.FC = () => {
-  const { data, addMoodLog, addActivityLog, addJournalEntry, addGoal, toggleGoal } = useWellnessData();
-  const [isAiLoading, setIsAiLoading] = useState(false);
-  const [activeView, setActiveView] = useState('dashboard');
+  const [appState, setAppState] = useState<'landing' | 'chat'>('landing');
+  const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
-  const processAiCommand = useCallback(async (command: string, addMessage: (author: 'user' | 'ai' | 'system', text: string) => void) => {
-    setIsAiLoading(true);
-    try {
-      const result = await handleAiCommand(command, data);
-      if (result.action === 'respond') {
-        addMessage('ai', result.payload.text);
-      }
-    } catch (error) {
-      console.error("Error processing AI command:", error);
-      addMessage('system', 'Sorry, I encountered an error. Please try again.');
-    } finally {
-      setIsAiLoading(false);
-    }
-  }, [data]);
+  const handleGetStarted = () => {
+    setAppState('chat');
+    // Attempt to play on first user interaction in case autoplay was blocked
+    audioRef.current?.play().catch(error => {
+      console.warn("Audio play failed on interaction:", error);
+    });
+  };
 
-  const renderActiveView = () => {
-    switch(activeView) {
-      case 'dashboard':
-        return <Dashboard 
-                  data={data} 
-                  onLogMood={addMoodLog} 
-                  onLogActivity={addActivityLog}
-                  setActiveView={setActiveView as (view: 'goals') => void}
-                />;
-      case 'journal':
-        return <Journal entries={data.journalEntries} onAddEntry={addJournalEntry} />;
-      case 'goals':
-        return <Goals goals={data.goals} onAddGoal={addGoal} onToggleGoal={toggleGoal} />;
-      case 'history':
-        return <ChartCard moodLogs={data.moodLogs} biometricHistory={data.biometricHistory} />;
-      default:
-        return <Dashboard 
-                  data={data} 
-                  onLogMood={addMoodLog} 
-                  onLogActivity={addActivityLog}
-                  setActiveView={setActiveView as (view: 'goals') => void}
-                />;
+  // Attempt to play music when component mounts, respecting browser autoplay policies
+  useEffect(() => {
+    const audioEl = audioRef.current;
+    if (audioEl) {
+      audioEl.play().catch(error => {
+        // Autoplay was prevented. It will be triggered by user interaction.
+        console.warn("Background music autoplay was prevented by the browser.");
+      });
     }
-  }
+  }, []);
+
+  const toggleMute = () => {
+    setIsMuted(prevMuted => !prevMuted);
+  };
+
 
   return (
-    <div className="min-h-screen bg-gray-900 font-sans flex flex-col">
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar activeView={activeView} setActiveView={setActiveView} />
-        <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-y-auto">
-          {renderActiveView()}
-        </main>
-      </div>
-      <AiAssistant onSendCommand={processAiCommand} isLoading={isAiLoading} />
+    <div className="min-h-screen bg-gray-950 font-sans">
+      {appState === 'landing' ? (
+        <LandingPage onGetStarted={handleGetStarted} />
+      ) : (
+        <ChatDashboard />
+      )}
+      
+      {/* Background Audio Player */}
+      <audio 
+        ref={audioRef} 
+        src="https://cdn.pixabay.com/audio/2022/08/04/audio_2dde668d05.mp3" 
+        autoPlay 
+        loop 
+        muted={isMuted}
+      />
+
+      {/* Global Mute Button */}
+      <button
+        onClick={toggleMute}
+        className="fixed bottom-4 right-4 z-50 w-12 h-12 bg-gray-800/80 backdrop-blur-sm border border-gray-700/50 rounded-full text-gray-300 hover:text-white hover:bg-gray-700 transition-all flex items-center justify-center shadow-lg"
+        aria-label={isMuted ? 'Unmute background music' : 'Mute background music'}
+      >
+        <i className={`fas ${isMuted ? 'fa-volume-mute' : 'fa-volume-up'}`}></i>
+      </button>
     </div>
   );
 };

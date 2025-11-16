@@ -1,6 +1,6 @@
 {
-  "name": "Haven - Your Mental Wellness Companion",
-  "description": "A mental health and wellness dashboard to help you track your mood, log activities, and reflect through journaling. Features a supportive AI companion powered by Gemini to provide insights and encouragement.",
+  "name": "AI Therapist Agent",
+  "description": "An AI-powered therapist agent that helps you understand your thoughts and feelings. Features real-time mood and sentiment analysis powered by Gemini.",
   "requestFramePermissions": [
     "camera"
   ]

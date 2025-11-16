@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { MoodLog, BiometricHistoryEntry } from '../types';
 import { moodMapping } from '../hooks/useIotData';
 
@@ -25,7 +25,6 @@ const ChartCard: React.FC<ChartCardProps> = ({ moodLogs, biometricHistory }) => 
           stroke: "#38B2AC",
           name: "Mood",
           domain: [0.5, 5.5],
-          // fix: Explicitly type 'm' to resolve 'unknown' type error.
           ticks: Object.values(moodMapping).map((m: { value: number }) => m.value),
           formatter: (value: number, name: string, props: any) => [props.payload.mood, 'Mood'],
           yAxisFormatter: formatYAxisMood,
@@ -57,6 +56,7 @@ const ChartCard: React.FC<ChartCardProps> = ({ moodLogs, biometricHistory }) => 
 
   const currentChart = chartConfig[chartType];
   const noData = currentChart.data.length === 0;
+  const gradientId = `color-${chartType}`;
 
   return (
     <div className="bg-gray-800/50 p-4 rounded-lg shadow-lg border border-gray-700/50 h-72 md:h-80 flex flex-col">
@@ -76,10 +76,16 @@ const ChartCard: React.FC<ChartCardProps> = ({ moodLogs, biometricHistory }) => 
                 Log data to see your history here.
             </div>
         ) : (
-          <LineChart
+          <AreaChart
             data={currentChart.data}
             margin={{ top: 5, right: 20, left: -20, bottom: 5, }}
           >
+            <defs>
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={currentChart.stroke} stopOpacity={0.8}/>
+                <stop offset="95%" stopColor={currentChart.stroke} stopOpacity={0}/>
+              </linearGradient>
+            </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#4A5568" />
             <XAxis dataKey="timestamp" stroke="#A0AEC0" fontSize={12} />
             <YAxis 
@@ -94,8 +100,16 @@ const ChartCard: React.FC<ChartCardProps> = ({ moodLogs, biometricHistory }) => 
               labelStyle={{ color: '#E2E8F0' }}
               formatter={currentChart.formatter}
             />
-            <Line type="monotone" dataKey={currentChart.dataKey} name={currentChart.name} stroke={currentChart.stroke} strokeWidth={2} dot={false} />
-          </LineChart>
+            <Area 
+                type="monotone" 
+                dataKey={currentChart.dataKey} 
+                name={currentChart.name} 
+                stroke={currentChart.stroke} 
+                strokeWidth={2} 
+                fillOpacity={1} 
+                fill={`url(#${gradientId})`} 
+            />
+          </AreaChart>
         )}
       </ResponsiveContainer>
     </div>

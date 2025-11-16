@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from '@google/genai';
-import { MentalHealthData, Mood, Recommendation } from '../types';
+// Fix: Add missing type imports
+import { Message, Analysis, MentalHealthData, Mood, Recommendation } from '../types';
 
 if (!process.env.API_KEY) {
   throw new Error("API_KEY environment variable not set");
@@ -7,167 +8,187 @@ if (!process.env.API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-type AiActionResult = { action: 'respond'; payload: { text: string } };
+const model = 'gemini-2.5-flash';
 
-export const handleAiCommand = async (prompt: string, healthData: MentalHealthData): Promise<AiActionResult> => {
-  const model = 'gemini-2.5-flash';
-  
-  // Create summaries of recent data
-  const recentMoods = healthData.moodLogs.slice(-5).map(log => log.mood).join(', ') || 'None logged recently.';
-  const recentActivities = healthData.activityLogs.slice(-5).map(log => log.activity).join(', ') || 'None logged recently.';
-  const journalSummary = healthData.journalEntries.length > 0
-    ? `The user has ${healthData.journalEntries.length} journal entries. The latest one is titled "${healthData.journalEntries[0].title}".`
-    : 'No journal entries have been made.';
-  const stressLevel = Math.round((healthData.biometrics.gsr / 1023) * 100);
-  const goalsSummary = healthData.goals.length > 0
-    ? `The user has ${healthData.goals.length} goals. ${healthData.goals.filter(g => !g.completed).length} are still active.`
-    : 'No goals have been set yet.';
-
-  // fix: Removed the user prompt from the system instruction, as it's passed separately in `contents`.
-  const systemInstruction = `You are Haven AI, a supportive and empathetic companion for mental wellness. Your role is to provide encouragement, gentle insights, and helpful suggestions based on the user's logged data. Correlate all available data points for holistic insights.
-
-  **IMPORTANT RULES:**
-  1.  **DO NOT PROVIDE MEDICAL ADVICE.** You are not a doctor or therapist. If the user seems to be in serious distress, gently suggest they talk to a qualified professional.
-  2.  Be positive, empathetic, and non-judgmental.
-  3.  Keep your responses concise and easy to understand.
-  4.  Base your insights on the data provided.
-
-  **Current User Data Summary:**
-  - **Recent Moods:** ${recentMoods}
-  - **Recent Activities:** ${recentActivities}
-  - **Journaling:** ${journalSummary}
-  - **Wellness Goals:** ${goalsSummary}
-  - **Current Biometrics:** Heart Rate is ${healthData.biometrics.heartRate} BPM. Stress level is ${stressLevel}%.
-  - **Current Environment:** The room is ${healthData.environment.temperature}°C, ${healthData.environment.humidity}% humidity, with a light level of ${healthData.environment.light} lux.
-  - **Current Physical Activity:** The user is currently ${healthData.activityLevel}.`;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: model,
-      contents: prompt, // The user's message is the main content
-      config: {
-          systemInstruction: systemInstruction,
-      }
-    });
-
-    return { action: 'respond', payload: { text: response.text } };
-  } catch (error) {
-    console.error("Error calling Gemini API:", error);
-    return { action: 'respond', payload: { text: "I'm having a little trouble connecting right now. Please try again in a moment." } };
-  }
+const analysisSchema = {
+    type: Type.OBJECT,
+    properties: {
+        response: {
+            type: Type.STRING,
+            description: "An empathetic, supportive, and therapeutic response to the user's message. Keep it concise, around 1-3 sentences.",
+        },
+        analysis: {
+            type: Type.OBJECT,
+            description: "An analysis of the user's most recent message.",
+            properties: {
+                sentimentScore: {
+                    type: Type.NUMBER,
+                    description: "A score from -1 (very negative) to 1 (very positive) representing the sentiment of the user's message.",
+                },
+                mood: {
+                    type: Type.STRING,
+                    description: "A single word describing the primary mood of the user's message (e.g., Sad, Anxious, Reflective, Hopeful).",
+                },
+                subject: {
+                    type: Type.STRING,
+                    description: "A short phrase (2-3 words) identifying the main subject of the message (e.g., Work Stress, Family Relationships, Self-Reflection).",
+                },
+                summary: {
+                    type: Type.STRING,
+                    description: "A brief, one-sentence summary of the user's message.",
+                },
+                isNegative: {
+                    type: Type.BOOLEAN,
+                    description: "True if the mood or sentiment is predominantly negative."
+                },
+                color: {
+                    type: Type.STRING,
+                    description: "A hex color code (e.g., '#63B3ED') that visually represents the detected mood. Use calming, pastel, or appropriate colors."
+                }
+            },
+            required: ['sentimentScore', 'mood', 'subject', 'summary', 'isNegative', 'color'],
+        }
+    },
+    required: ['response', 'analysis'],
 };
 
-export const analyzeFacialExpression = async (base64ImageData: string, healthData: MentalHealthData): Promise<{ mood: Mood; insight: string; recommendation: Recommendation }> => {
-  const model = 'gemini-2.5-flash';
-  
-  const recentActivities = healthData.activityLogs.slice(-3).map(log => log.activity).join(', ') || 'None recently.';
-  const journalSummary = healthData.journalEntries.length > 0
-    ? `The latest journal entry is titled "${healthData.journalEntries[0].title}".`
-    : 'No recent journal entries.';
-
-  const prompt = `Analyze the facial expression in this image to determine the user's primary mood. Based on the detected mood AND the provided user context, generate personalized recommendations.
-
-  **User Context:**
-  - **Recent Activities:** ${recentActivities}
-  - **Journaling:** ${journalSummary}
-
-  Respond with only a JSON object containing:
-  1. 'mood': one of 'Happy', 'Calm', 'Neutral', 'Anxious', 'Sad', 'Angry', 'Stressed', 'Tired', 'Surprised'.
-  2. 'insight': a short, supportive insight (max 20 words) that connects the mood to their context if possible.
-  3. 'recommendation': an object with four creative, diverse, and context-aware suggestions to improve or maintain the mood:
-     - 'song' (with 'title' and 'artist')
-     - 'exercise' (a simple, actionable suggestion, e.g., '10-minute walk', 'gentle stretching')
-     - 'activity' (another simple suggestion, e.g., 'brew a cup of tea', 'doodle for 5 minutes')
-     - 'podcast' (with episode 'title' and show 'show').
-  Be varied and creative in your suggestions, making them relevant to the user's situation.`;
-
-  const imagePart = {
-    inlineData: {
-      mimeType: 'image/jpeg',
-      data: base64ImageData,
-    },
-  };
-
-  const textPart = { text: prompt };
-
-  const validMoods: Mood[] = ['Happy', 'Calm', 'Neutral', 'Anxious', 'Sad', 'Angry', 'Stressed', 'Tired', 'Surprised'];
-
-  try {
-    const response = await ai.models.generateContent({
-      model: model,
-      contents: { parts: [imagePart, textPart] },
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            mood: {
-              type: Type.STRING,
-              enum: validMoods,
-            },
-            insight: {
-              type: Type.STRING,
-            },
-            recommendation: {
-              type: Type.OBJECT,
-              properties: {
+// Fix: Add schema for facial analysis
+const facialAnalysisSchema = {
+    type: Type.OBJECT,
+    properties: {
+        mood: {
+            type: Type.STRING,
+            description: "A single word describing the primary mood detected from the user's facial expression. Must be one of: Happy, Calm, Neutral, Surprised, Tired, Anxious, Stressed, Sad, Angry.",
+            enum: ['Happy', 'Calm', 'Neutral', 'Surprised', 'Tired', 'Anxious', 'Stressed', 'Sad', 'Angry'],
+        },
+        insight: {
+            type: Type.STRING,
+            description: "A short, empathetic, one-sentence insight based on the detected mood. For example: 'You seem to be carrying some tension today.' or 'It's wonderful to see you looking so content.'",
+        },
+        recommendation: {
+            type: Type.OBJECT,
+            properties: {
                 song: {
-                  type: Type.OBJECT,
-                  properties: {
-                    title: { type: Type.STRING },
-                    artist: { type: Type.STRING },
-                  },
-                  required: ['title', 'artist'],
-                },
-                exercise: {
-                  type: Type.STRING,
-                  description: "A simple, actionable exercise recommendation (e.g., '10-minute walk').",
-                },
-                activity: {
-                  type: Type.STRING,
-                  description: "Another simple activity suggestion (e.g., 'brew a cup of tea').",
+                    type: Type.OBJECT,
+                    properties: {
+                        title: { type: Type.STRING },
+                        artist: { type: Type.STRING }
+                    },
+                    required: ['title', 'artist']
                 },
                 podcast: {
-                  type: Type.OBJECT,
-                  properties: {
-                    title: { type: Type.STRING },
-                    show: { type: Type.STRING },
-                  },
-                  required: ['title', 'show'],
+                    type: Type.OBJECT,
+                    properties: {
+                        title: { type: Type.STRING },
+                        show: { type: Type.STRING }
+                    },
+                    required: ['title', 'show']
+                },
+                exercise: {
+                    type: Type.STRING,
+                    description: "A simple, short exercise suggestion. e.g., 'A 10-minute walk outside.'"
+                },
+                activity: {
+                    type: Type.STRING,
+                    description: "A non-exercise activity suggestion. e.g., 'Spend 15 minutes journaling.'"
                 }
-              },
-              required: ['song', 'exercise', 'activity', 'podcast'],
             },
-          },
-          required: ['mood', 'insight', 'recommendation'],
+            required: ['song', 'podcast', 'exercise', 'activity']
+        }
+    },
+    required: ['mood', 'insight', 'recommendation']
+};
+
+// Fix: Add analyzeFacialExpression function
+export const analyzeFacialExpression = async (base64ImageData: string, context: MentalHealthData): Promise<{ mood: Mood; insight: string; recommendation: Recommendation; }> => {
+    
+    const imagePart = {
+        inlineData: {
+            mimeType: 'image/jpeg',
+            data: base64ImageData,
         },
-      },
-    });
+    };
 
-    const result = JSON.parse(response.text);
+    const latestMood = context.moodLogs.length > 0 ? context.moodLogs[context.moodLogs.length - 1].mood : 'not available';
+    const latestActivity = context.activityLogs.length > 0 ? context.activityLogs[context.activityLogs.length - 1].activity : 'not available';
 
-    // Basic validation to ensure the result is in the expected format.
-    if (result && 
-        validMoods.includes(result.mood) && 
-        typeof result.insight === 'string' && 
-        typeof result.recommendation === 'object' &&
-        typeof result.recommendation.song === 'object' &&
-        typeof result.recommendation.song.title === 'string' &&
-        typeof result.recommendation.song.artist === 'string' &&
-        typeof result.recommendation.exercise === 'string' &&
-        typeof result.recommendation.activity === 'string' &&
-        typeof result.recommendation.podcast === 'object' &&
-        typeof result.recommendation.podcast.title === 'string' &&
-        typeof result.recommendation.podcast.show === 'string'
-        ) {
-      return result as { mood: Mood; insight: string; recommendation: Recommendation };
-    } else {
-      throw new Error("Invalid response format from AI.");
+    const textPrompt = `Analyze the user's facial expression in the provided image. Based on their expression and their recent context, provide a mood analysis and personalized recommendations.
+    
+    User's recent context:
+    - Last logged mood: ${latestMood}
+    - Last logged activity: ${latestActivity}
+    - Current heart rate: ${context.biometrics.heartRate} BPM
+    - Current stress level (GSR): ${Math.round((context.biometrics.gsr / 1023) * 100)}%
+
+    Return the analysis in the specified JSON format. The insight should be empathetic. The recommendations should be actionable and simple. The mood must be one of the predefined types.
+    `;
+
+    const textPart = { text: textPrompt };
+
+    try {
+        const result = await ai.models.generateContent({
+            model: model, // Using the multimodal gemini-2.5-flash model
+            contents: { parts: [imagePart, textPart] },
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: facialAnalysisSchema,
+            }
+        });
+
+        const parsedResult = JSON.parse(result.text);
+
+        if (!parsedResult.mood || !parsedResult.insight || !parsedResult.recommendation) {
+            throw new Error("Invalid JSON response format from AI for facial analysis.");
+        }
+
+        return parsedResult as { mood: Mood; insight: string; recommendation: Recommendation; };
+    } catch (error) {
+        console.error("Error calling Gemini API for facial analysis:", error);
+        throw new Error("I had trouble analyzing the image. Please try again.");
     }
+};
 
-  } catch (error) {
-    console.error("Error calling Gemini API for image analysis:", error);
-    // Provide a fallback or re-throw
-    throw new Error("I had trouble analyzing the image. Please try again.");
-  }
+
+export const analyzeAndRespond = async (history: Message[], newMessage: string): Promise<{ response: string; analysis: Analysis; }> => {
+    const systemInstruction = `You are an empathetic AI therapist. Your role is to listen to the user, provide supportive responses, and help them understand their feelings. When you respond, you MUST provide both a conversational reply and a structured analysis of their message in the specified JSON format.`;
+
+    // We can simplify history for the prompt if needed, but for now, we'll just use the new message
+    const prompt = `Based on my message below, please provide a therapeutic response and a detailed analysis.
+    
+    My message: "${newMessage}"`;
+
+    try {
+        const result = await ai.models.generateContent({
+            model: model,
+            contents: prompt,
+            config: {
+                systemInstruction: systemInstruction,
+                responseMimeType: "application/json",
+                responseSchema: analysisSchema,
+            }
+        });
+
+        const parsedResult = JSON.parse(result.text);
+        
+        // Basic validation
+        if (!parsedResult.response || !parsedResult.analysis) {
+            throw new Error("Invalid JSON response format from AI.");
+        }
+
+        return parsedResult as { response: string; analysis: Analysis; };
+    } catch (error) {
+        console.error("Error calling Gemini API:", error);
+        // Fallback response
+        return {
+            response: "I'm having a little trouble connecting right now. Could you please try again in a moment?",
+            analysis: {
+                sentimentScore: 0,
+                mood: 'Error',
+                subject: 'Connection Issue',
+                summary: 'Could not analyze the message due to a technical error.',
+                isNegative: true,
+                color: '#A0AEC0'
+            }
+        };
+    }
 };

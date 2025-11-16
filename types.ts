@@ -1,55 +1,80 @@
-export type Mood = 'Happy' | 'Calm' | 'Neutral' | 'Anxious' | 'Sad' | 'Angry' | 'Stressed' | 'Tired' | 'Surprised';
+export interface Message {
+  id: string;
+  role: 'user' | 'model';
+  text: string;
+}
+
+export interface Analysis {
+  sentimentScore: number;
+  mood: string;
+  subject: string;
+  summary: string;
+  isNegative: boolean;
+  color: string;
+}
+
+export interface ChatSession {
+  id: string;
+  title: string;
+  messages: Message[];
+  analysis?: Analysis | null;
+  createdAt: string;
+}
+
+// Fix: Add all missing type definitions
+export type Mood = 'Happy' | 'Calm' | 'Neutral' | 'Surprised' | 'Tired' | 'Anxious' | 'Stressed' | 'Sad' | 'Angry';
 export type Activity = 'Meditate' | 'Exercise' | 'Journal' | 'Socialize' | 'Work' | 'Hobby';
 export type ActivityLevel = 'Sedentary' | 'Light' | 'Active';
 
-export interface LogEntry {
-  id: string;
-  timestamp: string;
-}
-
 export interface Recommendation {
-  song: { title: string; artist: string };
+  song: { title: string; artist: string; };
+  podcast: { title: string; show: string; };
   exercise: string;
   activity: string;
-  podcast: { title: string; show: string };
 }
 
-export interface MoodLog extends LogEntry {
+export interface MoodLog {
+  id: string;
+  timestamp: string;
   mood: Mood;
-  value: number; // A numerical representation for charting
-  insight?: string; // Optional insight from AI analysis
-  recommendation?: Recommendation; // Optional recommendation from AI analysis
+  value: number;
+  insight?: string;
+  recommendation?: Recommendation;
 }
 
-export interface ActivityLog extends LogEntry {
+export interface ActivityLog {
+  id: string;
+  timestamp: string;
   activity: Activity;
 }
 
-export interface JournalEntry extends LogEntry {
-  text: string;
+export interface JournalEntry {
+  id: string;
+  timestamp: string;
   title: string;
+  text: string;
 }
 
 export interface Goal {
   id: string;
+  timestamp: string;
   text: string;
   completed: boolean;
-  timestamp: string;
 }
 
 export interface BiometricData {
-    heartRate: number; // Beats per minute
-    gsr: number; // Galvanic Skin Response (raw value, e.g., 0-1023)
+  heartRate: number;
+  gsr: number;
 }
 
 export interface EnvironmentData {
-    temperature: number; // Celsius
-    humidity: number; // Percentage
-    light: number; // Lux
+  temperature: number;
+  humidity: number;
+  light: number;
 }
 
 export interface BiometricHistoryEntry extends BiometricData {
-    timestamp: string;
+  timestamp: string;
 }
 
 export interface MentalHealthData {

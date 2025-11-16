@@ -179,7 +179,6 @@ const SensorCard: React.FC<SensorCardProps> = ({ onLogMood, data }) => {
                 {analysisResult && currentMoodData ? (
                   <div className="w-full flex flex-col items-center p-6 bg-gray-900 overflow-y-auto" style={{ maxHeight: '65vh' }}>
                     <i className={`fas ${currentMoodData.icon} text-9xl mt-4 mb-6`} style={{ color: currentMoodData.color }}></i>
-                    <p className="text-gray-300 mb-6 text-center italic max-w-sm">"{analysisResult.insight}"</p>
                     
                     <div className="w-full space-y-2">
                       <div className="p-3 bg-gray-800 rounded-lg">
@@ -218,6 +217,30 @@ const SensorCard: React.FC<SensorCardProps> = ({ onLogMood, data }) => {
                               </div>
                           </div>
                       </div>
+                    </div>
+
+                    <div className="mt-6 w-full p-4 bg-gray-800/50 rounded-lg border border-gray-700/50">
+                        <h4 className="text-md font-semibold text-white mb-3 flex items-center gap-2">
+                            <i className="fas fa-file-alt text-teal-400"></i>
+                            <span>Your Quick Summary</span>
+                        </h4>
+                        <ul className="list-disc list-inside space-y-2 text-gray-300 text-sm">
+                            <li>
+                                <strong className="font-semibold text-gray-200">Mood:</strong> {analysisResult.mood}
+                            </li>
+                            <li>
+                                <strong className="font-semibold text-gray-200">Insight:</strong> <span className="italic">"{analysisResult.insight}"</span>
+                            </li>
+                            <li>
+                                <strong className="font-semibold text-gray-200">Next Steps:</strong>
+                                <ul className="list-disc list-inside ml-5 mt-1 text-gray-400">
+                                    <li>Listen to "{analysisResult.recommendation.song.title}"</li>
+                                    <li>Try the podcast "{analysisResult.recommendation.podcast.title}"</li>
+                                    <li>Consider: {analysisResult.recommendation.exercise}</li>
+                                    <li>Relax with: {analysisResult.recommendation.activity}</li>
+                                </ul>
+                            </li>
+                        </ul>
                     </div>
 
                     <p className="text-teal-400 text-xs mt-6">✓ Mood and insight logged</p>
