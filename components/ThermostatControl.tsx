@@ -17,8 +17,8 @@ const Journal: React.FC<JournalProps> = ({ onAddEntry, entries }) => {
   return (
     <div className="p-4 md:p-8 h-full flex flex-col overflow-y-auto">
         <div className="flex-shrink-0">
-            <h1 className="text-3xl font-bold text-white mb-6">Your Journal</h1>
-            <div className="bg-gray-800/50 p-4 rounded-lg shadow-lg border border-gray-700/50 mb-6">
+            <h1 className="text-3xl font-bold text-white mb-6 animate-[slideInUp_0.5s_ease-out]">Your Journal</h1>
+            <div className="bg-gray-800/50 p-4 rounded-lg shadow-lg border border-gray-700/50 mb-6 animate-[slideInUp_0.5s_ease-out] [animation-delay:100ms] opacity-0" style={{ animationFillMode: 'forwards' }}>
                 <h3 className="font-semibold text-gray-300 mb-3">New Entry</h3>
                 <textarea
                     value={text}
@@ -38,11 +38,14 @@ const Journal: React.FC<JournalProps> = ({ onAddEntry, entries }) => {
         </div>
 
         <div className="flex-grow overflow-y-auto">
-            <h2 className="text-2xl font-bold text-white mb-4">Past Entries</h2>
+            <h2 className="text-2xl font-bold text-white mb-4 animate-[slideInUp_0.5s_ease-out] [animation-delay:200ms] opacity-0" style={{ animationFillMode: 'forwards' }}>Past Entries</h2>
             <div className="space-y-4">
                 {entries.length > 0 ? (
-                    entries.map(entry => (
-                        <div key={entry.id} className="bg-gray-800/50 p-4 rounded-lg border border-gray-700/50">
+                    entries.map((entry, index) => (
+                        <div 
+                           key={entry.id} 
+                           className={`bg-gray-800/50 p-4 rounded-lg border border-gray-700/50 ${index === 0 ? 'animate-[fadeIn_0.7s_ease-out]' : ''}`}
+                        >
                             <p className="text-xs text-gray-400 mb-2">
                                 {new Date(entry.timestamp).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
                             </p>
@@ -50,7 +53,7 @@ const Journal: React.FC<JournalProps> = ({ onAddEntry, entries }) => {
                         </div>
                     ))
                 ) : (
-                    <div className="text-center text-gray-500 p-8">
+                    <div className="text-center text-gray-500 p-8 animate-[fadeIn_0.7s_ease-out]">
                         <i className="fas fa-book-reader text-4xl mb-4"></i>
                         <p>Your journal is empty.</p>
                         <p>Write your first entry above to get started.</p>

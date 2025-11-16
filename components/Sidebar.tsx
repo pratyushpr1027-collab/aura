@@ -28,10 +28,10 @@ const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = ({ activeView, set
             <button
                 key={item.id}
                 onClick={() => setActiveView(item.id)}
-                className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-4 text-sm font-medium transition-colors ${
+                className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-4 text-sm font-medium transition-all duration-200 transform ${
                     activeView === item.id
                         ? 'bg-teal-600/80 text-white'
-                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                        : 'text-gray-400 hover:bg-gray-800 hover:text-white hover:translate-x-1'
                 }`}
             >
                 <i className={`fas ${item.icon} w-5 text-center text-lg`}></i>

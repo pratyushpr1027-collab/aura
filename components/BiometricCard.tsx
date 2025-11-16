@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { BiometricData, ActivityLevel } from '../types';
 
 interface BiometricCardProps {
@@ -9,6 +9,22 @@ interface BiometricCardProps {
 const BiometricCard: React.FC<BiometricCardProps> = ({ data, activityLevel }) => {
   const { heartRate, gsr } = data;
   const stressLevel = Math.round((gsr / 1023) * 100);
+
+  const heartRateRef = useRef<HTMLDivElement>(null);
+  const stressLevelRef = useRef<HTMLDivElement>(null);
+
+  // Animate on change
+  useEffect(() => {
+    heartRateRef.current?.classList.add('animate-pulse-value');
+    const timer = setTimeout(() => heartRateRef.current?.classList.remove('animate-pulse-value'), 700);
+    return () => clearTimeout(timer);
+  }, [heartRate]);
+
+  useEffect(() => {
+    stressLevelRef.current?.classList.add('animate-pulse-value');
+    const timer = setTimeout(() => stressLevelRef.current?.classList.remove('animate-pulse-value'), 700);
+    return () => clearTimeout(timer);
+  }, [stressLevel]);
 
   const getStressColor = (level: number) => {
     if (level > 75) return 'text-red-400';
@@ -34,17 +50,17 @@ const BiometricCard: React.FC<BiometricCardProps> = ({ data, activityLevel }) =>
             <h3 className="font-semibold text-gray-300 mb-4">Live Vitals</h3>
             <div className="space-y-4">
                 <div className="flex items-center">
-                    <i className={`fas fa-heartbeat text-2xl w-8 ${getHrColor(heartRate)}`}></i>
+                    <i className={`fas fa-heartbeat text-2xl w-8 transition-colors duration-500 ${getHrColor(heartRate)} animate-[slow-pulse_2.5s_ease-in-out_infinite]`}></i>
                     <div>
                         <div className="text-gray-400 text-sm">Heart Rate</div>
-                        <div className={`font-bold text-xl ${getHrColor(heartRate)}`}>{heartRate} <span className="text-sm font-normal">BPM</span></div>
+                        <div ref={heartRateRef} className={`font-bold text-xl transition-colors duration-500 ${getHrColor(heartRate)}`}>{heartRate} <span className="text-sm font-normal">BPM</span></div>
                     </div>
                 </div>
                 <div className="flex items-center">
-                    <i className={`fas fa-brain text-2xl w-8 ${getStressColor(stressLevel)}`}></i>
+                    <i className={`fas fa-brain text-2xl w-8 transition-colors duration-500 ${getStressColor(stressLevel)} animate-[slow-pulse_2.5s_ease-in-out_infinite] [animation-delay:-0.5s]`}></i>
                     <div>
                         <div className="text-gray-400 text-sm">Stress Level</div>
-                        <div className={`font-bold text-xl ${getStressColor(stressLevel)}`}>{stressLevel} <span className="text-sm font-normal">%</span></div>
+                        <div ref={stressLevelRef} className={`font-bold text-xl transition-colors duration-500 ${getStressColor(stressLevel)}`}>{stressLevel} <span className="text-sm font-normal">%</span></div>
                     </div>
                 </div>
             </div>

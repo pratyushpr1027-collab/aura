@@ -41,7 +41,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, isLoading, onSe
                 <i className="fas fa-brain text-white text-sm"></i>
               </div>
             )}
-            <div className={`rounded-lg px-4 py-2 max-w-lg ${
+            <div className={`rounded-lg px-4 py-2 max-w-lg animate-[pop-in_0.5s_ease-out_1] ${
                 msg.role === 'user' ? 'bg-teal-600 text-white' : 'bg-gray-800 text-gray-200'
             }`}>
               <p className="whitespace-pre-wrap">{msg.text}</p>
@@ -49,7 +49,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, isLoading, onSe
           </div>
         ))}
         {isLoading && (
-          <div className="flex items-start gap-3 justify-start">
+          <div className="flex items-start gap-3 justify-start animate-[fadeIn_0.5s_ease-out]">
             <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center flex-shrink-0">
                 <i className="fas fa-brain text-white text-sm"></i>
             </div>
@@ -79,7 +79,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ messages, isLoading, onSe
           <button
             onClick={handleSend}
             disabled={isLoading || !input.trim()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-md w-9 h-9 flex items-center justify-center transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-md w-9 h-9 flex items-center justify-center transition-all transform hover:scale-110 active:scale-100"
           >
             <i className="fas fa-paper-plane"></i>
           </button>

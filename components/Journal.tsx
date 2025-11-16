@@ -4,8 +4,8 @@ interface LandingPageProps {
   onGetStarted: () => void;
 }
 
-const FeatureCard: React.FC<{ icon: string; title: string; description: string }> = ({ icon, title, description }) => (
-    <div className="bg-gray-900 p-6 rounded-lg border border-gray-800">
+const FeatureCard: React.FC<{ icon: string; title: string; description: string; delay: string }> = ({ icon, title, description, delay }) => (
+    <div className="card-glow-effect bg-gray-900 p-6 rounded-lg border border-gray-800 animate-[slideInUp_0.6s_ease-out] opacity-0 transition-all duration-300 hover:border-teal-500 hover:-translate-y-2" style={{ animationDelay: delay, animationFillMode: 'forwards' }}>
         <div className="flex items-center justify-center h-12 w-12 rounded-md bg-teal-500 text-white mb-4">
             <i className={`fas ${icon} text-xl`}></i>
         </div>
@@ -18,7 +18,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center text-center p-4">
         <div className="max-w-4xl mx-auto">
-            <header className="mb-12">
+            <header className="mb-12 animate-[fadeIn_1s_ease-out]">
                 <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight mb-4">
                     Meet Your Personal AI Therapist
                 </h1>
@@ -27,7 +27,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 </p>
                 <button 
                     onClick={onGetStarted}
-                    className="mt-8 px-8 py-3 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition-colors duration-300 transform hover:scale-105"
+                    className="mt-8 px-8 py-3 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition-all duration-300 transform hover:scale-105"
                 >
                     Get Started
                 </button>
@@ -39,16 +39,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                         icon="fa-brain"
                         title="Understand Your Thoughts"
                         description="Our AI gently helps you explore your feelings and provides a real-time analysis of your mood and sentiment."
+                        delay="200ms"
                     />
                     <FeatureCard 
                         icon="fa-chart-line"
                         title="Track Your Mood"
                         description="See patterns in your emotional well-being over time through your conversation history and analysis."
+                        delay="400ms"
                     />
                     <FeatureCard 
                         icon="fa-lightbulb"
                         title="Get Actionable Advice"
                         description="Receive supportive guidance and suggestions based on your conversations to help you navigate life's challenges."
+                        delay="600ms"
                     />
                 </div>
             </main>

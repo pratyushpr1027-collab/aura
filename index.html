@@ -24,10 +24,85 @@
   <style>
     body {
       font-family: 'Inter', sans-serif;
+      background-color: #0F172A; /* slate-900 */
+    }
+    
+    /* Animated Orbs Background */
+    .orb-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: -1;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(45,212,191,0.3) 0%, rgba(45,212,191,0) 60%);
+      filter: blur(40px);
+      animation: float 20s infinite ease-in-out;
+    }
+    .orb:nth-child(1) { width: 300px; height: 300px; top: 10%; left: 5%; animation-duration: 25s; }
+    .orb:nth-child(2) { width: 500px; height: 500px; top: 20%; left: 70%; animation-duration: 30s; animation-delay: -5s; background: radial-gradient(circle, rgba(56,189,248,0.2) 0%, rgba(56,189,248,0) 65%); }
+    .orb:nth-child(3) { width: 250px; height: 250px; top: 80%; left: 15%; animation-duration: 22s; animation-delay: -10s; }
+    .orb:nth-child(4) { width: 400px; height: 400px; top: 70%; left: 80%; animation-duration: 28s; animation-delay: -15s; background: radial-gradient(circle, rgba(167,139,250,0.2) 0%, rgba(167,139,250,0) 65%);}
+    .orb:nth-child(5) { width: 350px; height: 350px; top: -20%; left: 40%; animation-duration: 35s; animation-delay: -20s; }
+    
+    /* Card hover effect with glow */
+    .card-glow-effect {
+      position: relative;
+      overflow: hidden;
+      z-index: 1; /* To contain the pseudo-element */
+    }
+    .card-glow-effect::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(45, 212, 191, 0.2) 0%, rgba(45, 212, 191, 0) 70%);
+      border-radius: 50%;
+      transition: width 0.4s ease-out, height 0.4s ease-out;
+      z-index: -1;
+    }
+    .card-glow-effect:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    @keyframes float {
+      0% { transform: translate(0px, 0px) scale(1); }
+      25% { transform: translate(20px, 40px) scale(1.1); }
+      50% { transform: translate(-30px, -10px) scale(0.9); }
+      75% { transform: translate(10px, -50px) scale(1.05); }
+      100% { transform: translate(0px, 0px) scale(1); }
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes pulse-value { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); color: #6EE7B7; } }
+    @keyframes subtle-pulse { 0% { box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(45, 212, 191, 0); } 100% { box-shadow: 0 0 0 0 rgba(45, 212, 191, 0); } }
+    @keyframes gentle-pulse { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(1.03); opacity: 0.4; } }
+    
+    @keyframes slideInFromRight {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes pop-in {
+      0% { opacity: 0; transform: scale(0.8); }
+      80% { opacity: 1; transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    @keyframes slow-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
     }
   </style>
 </head>
-  <body class="bg-gray-950 text-gray-100">
+  <body class="text-gray-100">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
