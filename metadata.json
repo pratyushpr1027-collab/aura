@@ -1,0 +1,7 @@
+{
+  "name": "Haven - Your Mental Wellness Companion",
+  "description": "A mental health and wellness dashboard to help you track your mood, log activities, and reflect through journaling. Features a supportive AI companion powered by Gemini to provide insights and encouragement.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
